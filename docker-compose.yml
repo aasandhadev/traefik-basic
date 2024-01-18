@@ -3,19 +3,26 @@ version: '3.8'
 services:
   proxy:
     container_name: proxy
-    image: traefik:alpine
+    image: traefik:latest
     restart: always
     labels:
-      - "traefik.frontend.rule=Host:monitor.traefik"
-      - "traefik.port=8080"
+      # - "traefik.frontend.rule=Host:monitor.docker"
+      # - "traefik.port=8080"
       - "traefik.enabled=true"
-      - "traefik.backend.healthcheck.enable=false"
+      # - "traefik.backend.healthcheck.enable=false"
       - "traefik.docker.network=proxy"
+      - "traefik.http.routers.proxy.rule=Host(`monitor.traefik`)"
+      - "traefik.http.routers.nginx.entrypoints=https"
+      - "traefik.http.routers.proxy.service=api@internal"
+      # - "traefik.http.routers.traefik.middlewares=auth" # enable password auth
+      # - "traefik.http.middlewares.auth.basicauth.users=admin:123" # substitute with your htpasswd string and escape dollar signs!
     ports:
       - 127.0.0.1:80:80
       - 127.0.0.1:8080:8080
+      - 127.0.0.1:443:443
     volumes:
       - ./traefik.toml:/etc/traefik/traefik.toml
+      - ./letsencrypt:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock
     logging:
       driver: "json-file"
